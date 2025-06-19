@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Resume Analyzer - Admin Panel</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      padding: 30px 20px;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      user-select: none;
+    }
+
+    .container {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px 50px;
+      width: 100%;
+      max-width: 700px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      user-select: text;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+
+    h1 {
+      font-weight: 600;
+      font-size: 2.4rem;
+      color: #4b3f6b;
+      text-align: center;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    label {
+      font-weight: 600;
+      color: #5e508f;
+      margin-bottom: 6px;
+      user-select: text;
+    }
+
+    input[type="text"],
+    textarea {
+      padding: 12px 15px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 2px solid #d6d3e3;
+      transition: border-color 0.3s ease;
+      resize: vertical;
+      font-family: 'Poppins', sans-serif;
+    }
+    input[type="text"]:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #764ba2;
+      box-shadow: 0 0 6px #b19cd9;
+    }
+
+    textarea {
+      min-height: 100px;
+    }
+
+    button {
+      background: #764ba2;
+      border: none;
+      color: white;
+      font-weight: 700;
+      font-size: 1.1rem;
+      padding: 15px;
+      border-radius: 40px;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(118,75,162,0.7);
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      user-select: none;
+    }
+    button:hover {
+      background: #5f378c;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(95,55,140,0.9);
+    }
+
+    .job-list {
+      max-height: 320px;
+      overflow-y: auto;
+      border: 2px solid #d6d3e3;
+      border-radius: 12px;
+      padding: 15px 20px;
+      background: #faf9ff;
+      user-select: text;
+    }
+
+    .job-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #e1dff7;
+    }
+    .job-item:last-child {
+      border-bottom: none;
+    }
+
+    .job-title {
+      font-weight: 600;
+      color: #4b3f6b;
+      flex-grow: 1;
+      user-select: text;
+    }
+
+    .edit-btn, .delete-btn {
+      background: #667eea;
+      border: none;
+      color: white;
+      padding: 7px 14px;
+      border-radius: 24px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-left: 12px;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+    .edit-btn:hover {
+      background: #5563d6;
+    }
+    .delete-btn {
+      background: #e55353;
+    }
+    .delete-btn:hover {
+      background: #c14444;
+    }
+
+    .empty-msg {
+      text-align: center;
+      color: #999;
+      font-style: italic;
+      user-select: text;
+    }
+
+  </style>
+</head>
+<body>
+  <main class="container" role="main" aria-label="Admin panel to manage job listings">
+    <h1>Admin Panel - Manage Job Listings</h1>
+
+    <form id="job-form" aria-label="Add or edit job listing form">
+      <input type="hidden" id="job-id" value="" />
+      
+      <label for="job-title">Job Title</label>
+      <input type="text" id="job-title" name="job_title" placeholder="Enter job title" required aria-required="true" />
+      
+      <label for="job-desc">Job Description</label>
+      <textarea id="job-desc" name="job_description" placeholder="Enter job description" required aria-required="true"></textarea>
+      
+      <button type="submit" id="submit-btn">Add Job</button>
+    </form>
+
+    <section class="job-list" aria-label="Current job listings" tabindex="0">
+      <!-- Job items inserted here -->
+      <p class="empty-msg" id="empty-msg">No job listings available.</p>
+    </section>
+  </main>
+
+  <script>
+    const jobForm = document.getElementById('job-form');
+    const jobIdInput = document.getElementById('job-id');
+    const jobTitleInput = document.getElementById('job-title');
+    const jobDescInput = document.getElementById('job-desc');
+    const submitBtn = document.getElementById('submit-btn');
+    const jobListSection = document.querySelector('.job-list');
+    const emptyMsg = document.getElementById('empty-msg');
+
+    // Example initial jobs data (replace with server data)
+    let jobs = [];
+
+    function renderJobs() {
+      jobListSection.innerHTML = '';
+      if (jobs.length === 0) {
+        jobListSection.appendChild(emptyMsg);
+        return;
+      }
+
+      jobs.forEach((job, index) => {
+        const jobItem = document.createElement('div');
+        jobItem.className = 'job-item';
+
+        const title = document.createElement('div');
+        title.className = 'job-title';
+        title.textContent = job.title;
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'edit-btn';
+        editBtn.textContent = 'Edit';
+        editBtn.setAttribute('aria-label', `Edit job listing: ${job.title}`);
+        editBtn.addEventListener('click', () => {
+          jobIdInput.value = index;
+          jobTitleInput.value = job.title;
+          jobDescInput.value = job.description;
+          submitBtn.textContent = 'Update Job';
+          jobTitleInput.focus();
+        });
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.setAttribute('aria-label', `Delete job listing: ${job.title}`);
+        deleteBtn.addEventListener('click', () => {
+          if (confirm(`Are you sure you want to delete "${job.title}"?`)) {
+            jobs.splice(index, 1);
+            renderJobs();
+            resetForm();
+          }
+        });
+
+        jobItem.appendChild(title);
+        jobItem.appendChild(editBtn);
+        jobItem.appendChild(deleteBtn);
+
+        jobListSection.appendChild(jobItem);
+      });
+    }
+
+    function resetForm() {
+      jobIdInput.value = '';
+      jobTitleInput.value = '';
+      jobDescInput.value = '';
+      submitBtn.textContent = 'Add Job';
+    }
+
+    jobForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const title = jobTitleInput.value.trim();
+      const description = jobDescInput.value.trim();
+
+      if (!title || !description) return;
+
+      const jobId = jobIdInput.value;
+
+      if (jobId === '') {
+        // Add new job
+        jobs.push({ title, description });
+      } else {
+        // Update existing job
+        jobs[jobId] = { title, description };
+      }
+
+      renderJobs();
+      resetForm();
+    });
+
+    // Initial render
+    renderJobs();
+  </script>
+</body>
+</html>

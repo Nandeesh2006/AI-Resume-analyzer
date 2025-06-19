@@ -1,0 +1,7 @@
+# Placeholder for requirements.txt
+flask
+spacy
+PyMuPDF
+scikit-learn
+python-docx
+sentence-transformers
